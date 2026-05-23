@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>WebOS</title>
+
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  font-family:Segoe UI;
+  overflow:hidden;
+  color:white;
+}
+
+/* TASKBAR */
+#taskbar{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  height:55px;
+  background:rgba(20,20,30,0.8);
+  backdrop-filter:blur(20px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+}
+
+/* START */
+#start{
+  position:fixed;
+  bottom:65px;
+  left:50%;
+  transform:translateX(-50%) scale(0);
+  width:550px;
+  background:rgba(30,30,40,0.85);
+  backdrop-filter:blur(30px);
+  border-radius:20px;
+  padding:20px;
+  transition:.25s;
+}
+#start.active{transform:translateX(-50%) scale(1)}
+
+input{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.apps{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.app{
+  padding:15px;
+  border-radius:10px;
+  text-align:center;
+  cursor:pointer;
+}
+.app:hover{background:rgba(255,255,255,0.1)}
+
+/* WINDOWS */
+.window{
+  position:absolute;
+  width:500px;
+  height:350px;
+  background:#111827;
+  border-radius:12px;
+  box-shadow:0 10px 40px black;
+  overflow:hidden;
+}
+
+.titlebar{
+  background:#1f2937;
+  padding:10px;
+  cursor:move;
+  display:flex;
+  justify-content:space-between;
+}
+
+.content{
+  padding:10px;
+  height:calc(100% - 40px);
+  overflow:auto;
+}
+
+/* DESKTOP */
+#desktop{
+  padding:20px;
+}
+.icon{
+  margin-bottom:15px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="desktop">
+  <div class="icon" onclick="openApp('explorer')">📁 Explorer</div>
+  <div class="icon" onclick="openApp('browser')">🌐 Browser</div>
+</div>
+
+<div id="start">
+  <input placeholder="Search apps..." oninput="search(this.value)">
+  <div class="apps" id="apps"></div>
+</div>
+
+<div id="taskbar">
+  <div onclick="toggleStart()">🪟</div>
+</div>
+
+<script>
+let z=1;
+const apps={
+  explorer:()=>{
+    return "<h3>Files</h3><p>📄 homework.txt<br>📄 secrets.txt<br>📁 games</p>";
+  },
+  browser:()=>{
+    return `
+      <input placeholder="Enter URL" onkeydown="if(event.key==='Enter'){this.nextElementSibling.src=this.value}">
+      <iframe style="width:100%;height:90%" src="https://example.com"></iframe>
+    `;
+  }
+};
+
+function openApp(name){
+  const win=document.createElement("div");
+  win.className="window";
+  win.style.top=Math.random()*200+"px";
+  win.style.left=Math.random()*300+"px";
+  win.style.zIndex=z++;
+
+  win.innerHTML=`
+    <div class="titlebar">
+      ${name}
+      <span onclick="this.closest('.window').remove()">✖</span>
+    </div>
+    <div class="content">${apps[name]()}</div>
+  `;
+
+  document.body.appendChild(win);
+  drag(win);
+}
+
+function drag(el){
+  const bar=el.querySelector(".titlebar");
+  let x,y,down=false;
+
+  bar.onmousedown=e=>{
+    down=true;
+    x=e.clientX-el.offsetLeft;
+    y=e.clientY-el.offsetTop;
+    el.style.zIndex=z++;
+  };
+
+  document.onmouseup=()=>down=false;
+
+  document.onmousemove=e=>{
+    if(!down)return;
+    el.style.left=e.clientX-x+"px";
+    el.style.top=e.clientY-y+"px";
+  };
+}
+
+function toggleStart(){
+  document.getElementById("start").classList.toggle("active");
+}
+
+function search(q){
+  const container=document.getElementById("apps");
+  container.innerHTML="";
+  Object.keys(apps).forEach(a=>{
+    if(a.includes(q)){
+      const div=document.createElement("div");
+      div.className="app";
+      div.innerText=a;
+      div.onclick=()=>openApp(a);
+      container.appendChild(div);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
